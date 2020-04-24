@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2018-08-17 fr2018-05-12
+# r2020-04-24 fr2018-05-12
 # by Valerio Capello - http://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -16,6 +16,10 @@ shwmem=1; # Show Memory Usage
 maxtim=-1; # Quit after cycling given times ( -1 : Infinite )
 maxsec=-1; # Quit after given seconds ( -1 : Infinite )
 
+# Get Parameters
+if [ "$#" -eq 1 ]; then
+if [ $1 > 0 ]; then maxtim=$1 ; fi
+fi
 
 cnti=0;
 while :
@@ -107,7 +111,7 @@ connotrav="$(( $connotrsm / $cnti ))";
 
 fi
 
-clear
+if [ $maxtim -ne 1 ]; then clear; fi
 
 echo "Estabilished Connections"; echo;
 
