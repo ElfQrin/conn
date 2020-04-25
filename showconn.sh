@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2020-04-24 fr2018-05-12
+# r2020-04-25 fr2018-05-12
 # by Valerio Capello - http://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -15,10 +15,11 @@ fne="/var/log/netstat-an.txt"; # Temp File Name
 shwmem=1; # Show Memory Usage
 maxtim=-1; # Quit after cycling given times ( -1 : Infinite )
 maxsec=-1; # Quit after given seconds ( -1 : Infinite )
+cls=1; # Clear Screen before showing any cycle (1: True, 0: False)
 
 # Get Parameters
 if [ "$#" -eq 1 ]; then
-if [ $1 > 0 ]; then maxtim=$1 ; fi
+if [ $1 -gt 0 ]; then maxtim=$1 ; fi
 fi
 
 cnti=0;
@@ -111,9 +112,13 @@ connotrav="$(( $connotrsm / $cnti ))";
 
 fi
 
-if [ $maxtim -ne 1 ]; then clear; fi
+if [ $maxtim -ne 1 ]; then
+if [ $cls -eq 1 ]; then clear; fi
+fi
 
+if [ $cls -eq 1 ] || [ $cnti -eq 1 ]; then
 echo "Estabilished Connections"; echo;
+fi
 
 CTIMESEC=$(date +%s)
 echo "Start Time: $STARTTIME";
@@ -134,10 +139,14 @@ if [ "$shwmem" -eq 1 ]; then
 echo; free;
 fi
 
+if [ $cls -eq 0 ]; then echo; echo; fi
+
+if [ $maxtim -ne 1 ]; then
 read -s -t 1 -N 1 input
 if [[ $input = 'q' ]] || [[ $input = 'Q' ]] || [[ $input = $'\e' ]]; then
 echo;
 break;
+fi
 fi
 
 if [ $maxtim -gt -1 -a $cnti -ge $maxtim ]; then
