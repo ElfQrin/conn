@@ -3,5 +3,4 @@
  
  http://labs.geody.com/conn/
 
-Screenshot:
 <img src="https://raw.githubusercontent.com/ElfQrin/conn/master/conn.png" alt="GeodyLabs showconn show conn estabilished connections Linux screenshot" />
