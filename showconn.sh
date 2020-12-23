@@ -1,41 +1,57 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2020-04-25 fr2018-05-12
+# r2020-12-23 fr2018-05-12
 # by Valerio Capello - http://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
 STARTTIMESEC=$(date +%s);
 
 # Config
-tsminon="\e[0;31m"; tsminof="\e[0m"; # Color for min value (on/off)
-tsmaxon="\e[0;32m"; tsmaxof="\e[0m"; # Color for max value (on/off)
+
+tsminon="\e[1;34m"; tsminof="\e[0m"; # Color for min value (on/off)
+tsmaxon="\e[1;31m"; tsmaxof="\e[0m"; # Color for max value (on/off)
 tsavgon="\e[0;33m"; tsavgof="\e[0m"; # Color for average value (on/off)
-fne="/var/log/netstat-an.txt"; # Temp File Name
-shwmem=1; # Show Memory Usage
+shwnohttpeconns=false; # Show NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80)
+shwcpuavld=true; # Show CPU Average Load
+shwmem=true; # Show Memory Usage
+shwusehr=true; # Show Memory Usage in Human Readable Format
 maxtim=-1; # Quit after cycling given times ( -1 : Infinite )
 maxsec=-1; # Quit after given seconds ( -1 : Infinite )
 cls=1; # Clear Screen before showing any cycle (1: True, 0: False)
 
+
+# Functions
+
+apphdr() {
+echo "Conn";
+echo "by Valerio Capello - labs.geody.com - License: GPL v3.0";
+}
+
+
 # Get Parameters
+
 if [ "$#" -eq 1 ]; then
 if [ $1 -gt 0 ]; then maxtim=$1 ; fi
 fi
+
+
+# Main
 
 cnti=0;
 while :
 do
 (( ++cnti ))
 
-netstat -an > $fne
+fne=$( netstat -an );
 
-conntot="$(cat $fne | awk '{print $6}' | grep 'ESTABLISHED' | wc -l)";
-conntottcp="$(cat $fne | awk '{print $1 " " $6}' | grep 'tcp' | grep 'ESTABLISHED' | wc -l)";
-conntotudp="$(cat $fne | awk '{print $1 " " $6}' | grep 'udp' | grep 'ESTABLISHED' | wc -l)";
-pt='22'; connsshpt="$pt"; connssh="$(cat $fne | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l)";
-pt='443'; connhtspt="$pt"; connhts="$(cat $fne | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l)";
-pt='80'; connhttpt="$pt"; connhtt="$(cat $fne | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l)";
-connotr="$(cat $fne | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | grep -v ":22 " | grep -v ":443 " | grep -v ":80 " | wc -l)";
+conntot=$(printf "$fne\n" | awk '{print $6}' | grep 'ESTABLISHED' | wc -l);
+conntottcp=$(printf "$fne\n" | awk '{print $1 " " $6}' | grep 'tcp' | grep 'ESTABLISHED' | wc -l);
+conntotudp=$(printf "$fne\n" | awk '{print $1 " " $6}' | grep 'udp' | grep 'ESTABLISHED' | wc -l);
+pt='22'; connsshpt="$pt"; connssh=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
+pt='443'; connhtspt="$pt"; connhts=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
+pt='80'; connhttpt="$pt"; connhtt=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
+connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | grep -v ":22 " | grep -v ":443 " | grep -v ":80 " | wc -l);
 
 if [ "$cnti" -eq 1 ]; then
 conntotsm="$conntot"; conntotmx="$conntot"; conntotmn="$conntot"; conntotav="$conntot";
@@ -117,6 +133,7 @@ if [ $cls -eq 1 ]; then clear; fi
 fi
 
 if [ $cls -eq 1 ] || [ $cnti -eq 1 ]; then
+apphdr; echo;
 echo "Estabilished Connections"; echo;
 fi
 
@@ -133,10 +150,22 @@ echo -n "HTTPS (port $connhtspt): $connhts - "; echo -ne "$tsminon"; echo -n "Mi
 echo -n "HTTP (port $connhttpt): $connhtt - "; echo -ne "$tsminon"; echo -n "Min: $connhttmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connhttmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connhttav"; echo -e "$tsavgof";
 echo -n "Other connections: $connotr - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof";
 
-# echo; echo "NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80): "; cat $fne | grep -v ":443 " | grep -v ":80 " | grep 'ESTABLISHED'
+if ( $shwnohttpeconns ); then
+echo; echo "NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80): "; printf "$fne\n" | grep -v ":443 " | grep -v ":80 " | grep 'ESTABLISHED'
+fi
 
-if [ "$shwmem" -eq 1 ]; then
-echo; free;
+if ( $shwcpuavld ); then
+echo; echo -n "CPU average load (Cores: "; grep 'cpu cores' /proc/cpuinfo | xargs | awk '{printf $4}'; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
+fi
+
+if ( $shwmem ); then
+echo; 
+if ( $shwusehr ); then
+free -h | xargs | awk '{print "Memory: Size: "$8" Used: "$9" Free: "$10" Avail: "$13}';
+swapon --show --noheadings --raw | xargs | awk '{print "Swap File: Dev: "$1" Total: "$3" Used: "$4}';
+else
+free;
+fi
 fi
 
 if [ $cls -eq 0 ]; then echo; echo; fi
