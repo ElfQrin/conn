@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2020-12-23 fr2018-05-12
-# by Valerio Capello - http://labs.geody.com/ - License: GPL v3.0
+# r2021-01-24 fr2018-05-12
+# by Valerio Capello - https://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
 STARTTIMESEC=$(date +%s);
@@ -155,7 +155,7 @@ echo; echo "NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80): "
 fi
 
 if ( $shwcpuavld ); then
-echo; echo -n "CPU average load (Cores: "; grep 'cpu cores' /proc/cpuinfo | xargs | awk '{printf $4}'; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
+echo; echo -n "CPU average load (Cores: "; grep -c 'processor' /proc/cpuinfo  | tr -d '\n' ; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
 fi
 
 if ( $shwmem ); then
