@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2021-01-24 fr2018-05-12
+# r2021-07-04 fr2018-05-12
 # by Valerio Capello - https://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -12,7 +12,8 @@ STARTTIMESEC=$(date +%s);
 tsminon="\e[1;34m"; tsminof="\e[0m"; # Color for min value (on/off)
 tsmaxon="\e[1;31m"; tsmaxof="\e[0m"; # Color for max value (on/off)
 tsavgon="\e[0;33m"; tsavgof="\e[0m"; # Color for average value (on/off)
-shwnohttpeconns=false; # Show NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80)
+cportnums=('22' '80' '443'); # Port Numbers
+cportnams=(); cportnams[22]='SSH'; cportnams[80]='HTTP'; cportnams[443]='HTTPS';  # Port Labels (Names)
 shwcpuavld=true; # Show CPU Average Load
 shwmem=true; # Show Memory Usage
 shwusehr=true; # Show Memory Usage in Human Readable Format
@@ -48,18 +49,30 @@ fne=$( netstat -an );
 conntot=$(printf "$fne\n" | awk '{print $6}' | grep 'ESTABLISHED' | wc -l);
 conntottcp=$(printf "$fne\n" | awk '{print $1 " " $6}' | grep 'tcp' | grep 'ESTABLISHED' | wc -l);
 conntotudp=$(printf "$fne\n" | awk '{print $1 " " $6}' | grep 'udp' | grep 'ESTABLISHED' | wc -l);
-pt='22'; connsshpt="$pt"; connssh=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
-pt='443'; connhtspt="$pt"; connhts=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
-pt='80'; connhttpt="$pt"; connhtt=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
-connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | grep -v ":22 " | grep -v ":443 " | grep -v ":80 " | wc -l);
+
+gpts=(); tgpts=0;
+if [ ${#cportnums[@]} -gt 0 ]; then
+for pt in "${cportnums[@]}"
+do
+gpts[$pt]=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
+(( tgpts+=gpts[pt] ))
+done
+fi
+
+connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | wc -l); $(( connotr=connotr-tgpts ));
 
 if [ "$cnti" -eq 1 ]; then
 conntotsm="$conntot"; conntotmx="$conntot"; conntotmn="$conntot"; conntotav="$conntot";
 conntottcpsm="$conntottcp"; conntottcpmx="$conntottcp"; conntottcpmn="$conntottcp"; conntottcpav="$conntottcp";
 conntotudpsm="$conntotudp"; conntotudpmx="$conntotudp"; conntotudpmn="$conntotudp"; conntotudpav="$conntotudp";
-connsshsm="$connssh"; connsshmx="$connssh"; connsshmn="$connssh"; connsshav="$connssh";
-connhtssm="$connhts"; connhtsmx="$connhts"; connhtsmn="$connhts"; connhtsav="$connhts";
-connhttsm="$connhtt"; connhttmx="$connhtt"; connhttmn="$connhtt"; connhttav="$connhtt";
+
+if [ ${#cportnums[@]} -gt 0 ]; then
+for pt in "${cportnums[@]}"
+do
+connpsm[$pt]="${gpts[pt]}"; connpmx[$pt]="${gpts[pt]}"; connpmn[$pt]="${gpts[pt]}"; connpav[$pt]="${gpts[pt]}";
+done
+fi
+
 connotrsm="$connotr"; connotrmx="$connotr"; connotrmn="$connotr"; connotrav="$connotr";
 else
 
@@ -90,32 +103,19 @@ fi
 conntotudpsm="$(( $conntotudpsm + $conntotudp ))";
 conntotudpav="$(( $conntotudpsm / $cnti ))";
 
-if [ "$connssh" -gt "$connsshmx" ]; then
-connsshmx=$connssh;
+if [ ${#cportnums[@]} -gt 0 ]; then
+for pt in "${cportnums[@]}"
+do
+if [ "${gpts[pt]}" -gt "${connpmx[pt]}" ]; then
+connpmx[$pt]="${gpts[pt]}";
 fi
-if [ "$connssh" -lt "$connsshmn" ]; then
-connsshmn=$connssh;
+if [ "${gpts[pt]}" -lt "${connpmn[pt]}" ]; then
+connpmn[$pt]="${gpts[pt]}";
 fi
-connsshsm="$(( $connsshsm + $connssh ))";
-connsshav="$(( $connsshsm / $cnti ))";
-
-if [ "$connhts" -gt "$connhtsmx" ]; then
-connhtsmx=$connhts;
+connpsm[$pt]="$(( ${connpsm[pt]} + ${gpts[pt]} ))";
+connpav[$pt]="$(( ${connpsm[pt]} / $cnti ))";
+done
 fi
-if [ "$connhts" -lt "$connhtsmn" ]; then
-connhtsmn=$connhts;
-fi
-connhtssm="$(( $connhtssm + $connhts ))";
-connhtsav="$(( $connhtssm / $cnti ))";
-
-if [ "$connhtt" -gt "$connhttmx" ]; then
-connhttmx=$connhtt;
-fi
-if [ "$connhtt" -lt "$connhttmn" ]; then
-connhttmn=$connhtt;
-fi
-connhttsm="$(( $connhttsm + $connhtt ))";
-connhttav="$(( $connhttsm / $cnti ))";
 
 if [ "$connotr" -gt "$connotrmx" ]; then
 connotrmx=$connotr;
@@ -145,14 +145,17 @@ echo;
 echo -n "Total: $conntot - "; echo -ne "$tsminon"; echo -n "Min: $conntotmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotav"; echo -e "$tsavgof";
 echo -n "Total TCP: $conntottcp - "; echo -ne "$tsminon"; echo -n "Min: $conntottcpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntottcpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntottcpav"; echo -e "$tsavgof";
 echo -n "Total UDP: $conntotudp - "; echo -ne "$tsminon"; echo -n "Min: $conntotudpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotudpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotudpav"; echo -e "$tsavgof";
-echo -n "SSH (port $connsshpt): $connssh - "; echo -ne "$tsminon"; echo -n "Min: $connsshmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connsshmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connsshav"; echo -e "$tsavgof";
-echo -n "HTTPS (port $connhtspt): $connhts - "; echo -ne "$tsminon"; echo -n "Min: $connhtsmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connhtsmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connhtsav"; echo -e "$tsavgof";
-echo -n "HTTP (port $connhttpt): $connhtt - "; echo -ne "$tsminon"; echo -n "Min: $connhttmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connhttmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connhttav"; echo -e "$tsavgof";
-echo -n "Other connections: $connotr - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof";
 
-if ( $shwnohttpeconns ); then
-echo; echo "NOT HTTPS/HTTP Estabilished Connections (excluding ports 443, 80): "; printf "$fne\n" | grep -v ":443 " | grep -v ":80 " | grep 'ESTABLISHED'
+if [ ${#cportnums[@]} -gt 0 ]; then
+for pt in "${cportnums[@]}"
+do
+echo -n "Port $pt";
+if [ -n "${cportnams[pt]}" ]; then echo -n " (${cportnams[pt]})"; fi
+echo -n ": ${gpts[pt]} - "; echo -ne "$tsminon"; echo -n "Min: ${connpmn[pt]}"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: ${connpmx[pt]}"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: ${connpav[pt]}"; echo -e "$tsavgof";
+done
 fi
+
+echo -n "Other connections: $connotr - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof";
 
 if ( $shwcpuavld ); then
 echo; echo -n "CPU average load (Cores: "; grep -c 'processor' /proc/cpuinfo  | tr -d '\n' ; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
