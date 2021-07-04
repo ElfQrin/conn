@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2021-07-04 fr2018-05-12
+# r2021-07-05 fr2018-05-12
 # by Valerio Capello - https://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -9,17 +9,17 @@ STARTTIMESEC=$(date +%s);
 
 # Config
 
-tsminon="\e[1;34m"; tsminof="\e[0m"; # Color for min value (on/off)
-tsmaxon="\e[1;31m"; tsmaxof="\e[0m"; # Color for max value (on/off)
-tsavgon="\e[0;33m"; tsavgof="\e[0m"; # Color for average value (on/off)
 cportnums=('22' '80' '443'); # Port Numbers
-cportnams=(); cportnams[22]='SSH'; cportnams[80]='HTTP'; cportnams[443]='HTTPS';  # Port Labels (Names)
+cportnams=(); cportnams[22]='SSH'; cportnams[80]='HTTP'; cportnams[443]='HTTPS'; # Port Labels (Names)
 shwcpuavld=true; # Show CPU Average Load
 shwmem=true; # Show Memory Usage
 shwusehr=true; # Show Memory Usage in Human Readable Format
 maxtim=-1; # Quit after cycling given times ( -1 : Infinite )
 maxsec=-1; # Quit after given seconds ( -1 : Infinite )
 cls=1; # Clear Screen before showing any cycle (1: True, 0: False)
+tsminon="\e[1;34m"; tsminof="\e[0m"; # Color for min value (on/off)
+tsmaxon="\e[1;31m"; tsmaxof="\e[0m"; # Color for max value (on/off)
+tsavgon="\e[0;33m"; tsavgof="\e[0m"; # Color for average value (on/off)
 
 
 # Functions
@@ -59,7 +59,7 @@ gpts[$pt]=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'EST
 done
 fi
 
-connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | wc -l); $(( connotr=connotr-tgpts ));
+connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | wc -l); connotr="$(( $connotr-$tgpts ))";
 
 if [ "$cnti" -eq 1 ]; then
 conntotsm="$conntot"; conntotmx="$conntot"; conntotmn="$conntot"; conntotav="$conntot";
