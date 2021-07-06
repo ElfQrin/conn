@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2021-07-05 fr2018-05-12
+# r2021-07-06 fr2018-05-12
 # by Valerio Capello - https://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -142,20 +142,24 @@ echo "Start Time: $STARTTIME";
 echo "Curr. Time: $(date)";
 echo "Cycles: $cnti - Seconds elapsed: $(($CTIMESEC - $STARTTIMESEC))";
 echo;
-echo -n "Total: $conntot - "; echo -ne "$tsminon"; echo -n "Min: $conntotmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotav"; echo -e "$tsavgof";
-echo -n "Total TCP: $conntottcp - "; echo -ne "$tsminon"; echo -n "Min: $conntottcpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntottcpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntottcpav"; echo -e "$tsavgof";
-echo -n "Total UDP: $conntotudp - "; echo -ne "$tsminon"; echo -n "Min: $conntotudpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotudpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotudpav"; echo -e "$tsavgof";
+echo -n "Total: $conntot";
+if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: $conntotmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotav"; echo -e "$tsavgof"; else echo; fi
+echo -n "Total TCP: $conntottcp";
+if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: $conntottcpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntottcpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntottcpav"; echo -e "$tsavgof"; else echo; fi
+echo -n "Total UDP: $conntotudp";
+if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: $conntotudpmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $conntotudpmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $conntotudpav"; echo -e "$tsavgof"; else echo; fi
 
 if [ ${#cportnums[@]} -gt 0 ]; then
 for pt in "${cportnums[@]}"
 do
 echo -n "Port $pt";
 if [ -n "${cportnams[pt]}" ]; then echo -n " (${cportnams[pt]})"; fi
-echo -n ": ${gpts[pt]} - "; echo -ne "$tsminon"; echo -n "Min: ${connpmn[pt]}"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: ${connpmx[pt]}"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: ${connpav[pt]}"; echo -e "$tsavgof";
+echo -n ": ${gpts[pt]}";
+if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: ${connpmn[pt]}"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: ${connpmx[pt]}"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: ${connpav[pt]}"; echo -e "$tsavgof"; else echo; fi
 done
 fi
 
-echo -n "Other connections: $connotr - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof";
+echo -n "Other connections: $connotr"; if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof"; else echo; fi
 
 if ( $shwcpuavld ); then
 echo; echo -n "CPU average load (Cores: "; grep -c 'processor' /proc/cpuinfo  | tr -d '\n' ; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
