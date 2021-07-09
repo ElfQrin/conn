@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Conn (showconn)
-# r2021-07-06 fr2018-05-12
+# r2021-07-09 fr2018-05-12
 # by Valerio Capello - https://labs.geody.com/ - License: GPL v3.0
 
 STARTTIME=$(date);
@@ -57,9 +57,8 @@ do
 gpts[$pt]=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep ":$pt " | grep 'ESTABLISHED' | wc -l);
 (( tgpts+=gpts[pt] ))
 done
-fi
-
 connotr=$(printf "$fne\n" | awk '{print $4 " " $6}' | grep 'ESTABLISHED' | wc -l); connotr="$(( $connotr-$tgpts ))";
+fi
 
 if [ "$cnti" -eq 1 ]; then
 conntotsm="$conntot"; conntotmx="$conntot"; conntotmn="$conntot"; conntotav="$conntot";
@@ -71,9 +70,9 @@ for pt in "${cportnums[@]}"
 do
 connpsm[$pt]="${gpts[pt]}"; connpmx[$pt]="${gpts[pt]}"; connpmn[$pt]="${gpts[pt]}"; connpav[$pt]="${gpts[pt]}";
 done
+connotrsm="$connotr"; connotrmx="$connotr"; connotrmn="$connotr"; connotrav="$connotr";
 fi
 
-connotrsm="$connotr"; connotrmx="$connotr"; connotrmn="$connotr"; connotrav="$connotr";
 else
 
 if [ "$conntot" -gt "$conntotmx" ]; then
@@ -115,7 +114,6 @@ fi
 connpsm[$pt]="$(( ${connpsm[pt]} + ${gpts[pt]} ))";
 connpav[$pt]="$(( ${connpsm[pt]} / $cnti ))";
 done
-fi
 
 if [ "$connotr" -gt "$connotrmx" ]; then
 connotrmx=$connotr;
@@ -125,6 +123,7 @@ connotrmn=$connotr;
 fi
 connotrsm="$(( $connotrsm + $connotr ))";
 connotrav="$(( $connotrsm / $cnti ))";
+fi
 
 fi
 
@@ -157,9 +156,8 @@ if [ -n "${cportnams[pt]}" ]; then echo -n " (${cportnams[pt]})"; fi
 echo -n ": ${gpts[pt]}";
 if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: ${connpmn[pt]}"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: ${connpmx[pt]}"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: ${connpav[pt]}"; echo -e "$tsavgof"; else echo; fi
 done
-fi
-
 echo -n "Other connections: $connotr"; if [ $maxtim -ne 1 ]; then echo -n " - "; echo -ne "$tsminon"; echo -n "Min: $connotrmn"; echo -ne "$tsminof"; echo -n " , "; echo -ne "$tsmaxon"; echo -n "Max: $connotrmx"; echo -ne "$tsmaxof"; echo -n " , "; echo -ne "$tsavgon"; echo -n "Avg: $connotrav"; echo -e "$tsavgof"; else echo; fi
+fi
 
 if ( $shwcpuavld ); then
 echo; echo -n "CPU average load (Cores: "; grep -c 'processor' /proc/cpuinfo  | tr -d '\n' ; echo -n "): "; uptime | awk -F'[a-z]:' '{print $2}' | xargs | awk '{print "1 m: "$1" 5 m: "$2" 15 m: "$3}';
